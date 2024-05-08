@@ -325,7 +325,7 @@ def main():
 
     st.sidebar.image("https://yt3.googleusercontent.com/ytc/AIdro_m_FFw3OGZ5SH0U-l_37_HQMQCyqfoL2co8iCBJQgQJ-q4b=s900-c-k-c0x00ffffff-no-rj", use_column_width=True)
     
-    st.sidebar.markdown("<div style='font-size:20px; font-weight:bold;'>Center For Creative Learning (CCL)</div>", unsafe_allow_html=True)
+    st.sidebar.markdown("<div style='font-size:20px; font-weight:bold;'>Center For Creative Learning (CCL), IIT Gandhinagar</div>", unsafe_allow_html=True)
     
     st.markdown("<h3 style='text-align: center;'>Upload Images</h3>", unsafe_allow_html=True)
 
