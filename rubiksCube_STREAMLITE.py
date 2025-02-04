@@ -323,19 +323,22 @@ def main():
     st.title("Dual-Sided Rubik's Cube Portrait")
     st.write("---")
 
-    st.sidebar.image("https://yt3.googleusercontent.com/ytc/AIdro_m_FFw3OGZ5SH0U-l_37_HQMQCyqfoL2co8iCBJQgQJ-q4b=s900-c-k-c0x00ffffff-no-rj", use_column_width=True)
+    st.sidebar.image("https://yt3.googleusercontent.com/ytc/AIdro_m_FFw3OGZ5SH0U-l_37_HQMQCyqfoL2co8iCBJQgQJ-q4b=s900-c-k-c0x00ffffff-no-rj",  use_container_width=True)
     
     st.sidebar.markdown("<div style='font-size:20px; font-weight:bold;'>Center For Creative Learning (CCL), IIT Gandhinagar</div>", unsafe_allow_html=True)
     
-    st.markdown("<h3 style='text-align: center;'>Upload Images</h3>", unsafe_allow_html=True)
+    st.markdown("<h4 style='text-align: left;'>Step 1:</h4>", unsafe_allow_html=True)
+    st.markdown("Generate a mosaic for individual images from here (https://bestsiteever.ru/mosaic/) with a resolution of 75x75 pixels, i.e. by using a 25x25 grid of cubes. ")
+
+    st.markdown("</br>", unsafe_allow_html=True)
+    st.markdown("<h4 style='text-align: left;'>Step 2: Drag and Drop Mosaic Images</h4>", unsafe_allow_html=True)
 
     # Upload the first image
     img1 = st.file_uploader("Upload Image 1", type=["png", "jpg", "jpeg"])
 
     # Upload the second image
     img2 = st.file_uploader("Upload Image 2", type=["png", "jpg", "jpeg"])
-    st.markdown("Generate mosaic for individual images from here (https://bestsiteever.ru/mosaic/) and drag and drop the files.")
-    st.markdown("**Note: Make sure to import images with equal no. of pixels.")
+    st.markdown("**Note: Current version only supports input mosaic image with 75x75 pixel resolution (25x25 cubes)!!")
     st.write("---")
 
     # Process the images if both are uploaded
@@ -366,10 +369,10 @@ def main():
         upscaled_img2 = upscaled_img2.resize((1920, 1920))
 
         st.subheader("Image 1")
-        st.image(upscaled_img1, use_column_width=True)
+        st.image(upscaled_img1,  use_container_width=True)
 
         st.subheader("Image 2")
-        st.image(upscaled_img2, use_column_width=True)
+        st.image(upscaled_img2,  use_container_width=True)
 
         if st.button("Process Images"):
 
@@ -390,10 +393,10 @@ def main():
             upscaled_img2 = upscaled_img2.resize((1920, 1920))
 
             st.subheader("Converted Image 1")
-            st.image(upscaled_img1, use_column_width=True)
+            st.image(upscaled_img1,  use_container_width=True)
 
             st.subheader("Converted Image 2")
-            st.image(upscaled_img2, use_column_width=True)
+            st.image(upscaled_img2,  use_container_width=True)
 
             st.success("Images processed successfully!")
             
@@ -415,7 +418,10 @@ def main():
                 file_name="DualSided_Rubik'sCube_images.zip",
                 mime="application/zip",
             )
-            st.markdown("Paste the (downloaded)converted images for making mosaic here (https://bestsiteever.ru/mosaic/) and download the pdf.")
+
+            st.markdown("</br>", unsafe_allow_html=True)
+            st.markdown("<h4 style='text-align: left;'>Step 3:</h4>", unsafe_allow_html=True)
+            st.markdown("Paste the downloaded/converted images for building mosaic here (https://bestsiteever.ru/mosaic/) and download the pdf.")
         
 
 if __name__ == "__main__":
