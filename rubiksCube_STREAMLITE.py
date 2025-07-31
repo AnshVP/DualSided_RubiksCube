@@ -11,9 +11,21 @@ import zipfile
 
 os.system("cls")     
 
-final_array = []
-img1_3d_to_4d = []
-img2_3d_to_4d = []
+RES_H = 0
+RES_W = 0
+
+# Define Rubik’s Cube standard colors (approximate RGB)
+CUBE_COLORS = np.array([
+        [255, 255, 255],   # White
+        [255, 255,   0],   # Yellow
+        [255,   0,   0],   # Red
+        [  0, 255,   0],   # Green
+        [  0,   0, 255],   # Blue
+        [255, 153,   0],   # Orange
+    ])
+
+TOLERANCE = 30  # How strict the color match should be
+
 img1_cubic= []
 img2_cubic= []
 
@@ -108,6 +120,7 @@ def find_side_piece(corner_1, corner_2, position):
 def process_images(img1, img2):
     global piece_color_img1, piece_color_img2, flag1, flag2, change_in_img1, prior_color_no_img1, prior_color_no_img2, prior_color_no, img1_cubic, img2_cubic
     
+    final_array = []
     img1_3d_to_4d = []
     img2_3d_to_4d = []
 
@@ -120,22 +133,26 @@ def process_images(img1, img2):
 
     final_array = [
         [
-            [i + k + (j * 75) for k in range(3)] 
+            [i + k + (j * (RES_W*3)) for k in range(3)] 
             for j in range(3)
         ] 
-        for i in range(0, 5625, 3)
+        for i in range(0, (RES_W*3)*(RES_H*3), 3)
     ]
         
-    img1_cubic = [final_array[i] for i in range(1875) if i % 75 < 25]
+    img1_cubic = [final_array[i] for i in range((RES_W*3)*RES_H) if i % (RES_W*3) < RES_W]
     temp_array = copy.deepcopy(img1_cubic)
     img2_cubic = copy.deepcopy(img1_cubic)
 
-    for i in range(0,625,1):
-        for j in range(0,3,1):
-            for k in range(0,3,1):
+    for i in range(RES_H*RES_W):
+        for j in range(3):
+            for k in range(3):
                 t1 = img1_cubic[i][j][k]   
-                img1_cubic[i][j][k] = list(img1_3d_to_4d[t1])
-                img2_cubic[i][j][k] = list(img2_3d_to_4d[t1])
+                try:
+                    img1_cubic[i][j][k] = list(img1_3d_to_4d[t1])
+                    img2_cubic[i][j][k] = list(img2_3d_to_4d[t1])
+                except:
+                    st.error("PLease upload images with same resolution!")
+                    exit(1)
 
     for i in range(len(img1_cubic)):
         clear_color_count()
@@ -182,7 +199,6 @@ def process_images(img1, img2):
                     if flag1 == 0:
                         piece_color_img1 = get_color(img1_cubic[i][1][2])
                     if(prior_color_no_img1 >= 5):
-                        print(prior_color_no_img1)
                         break    
                         
                     img1_cubic[i][1][2] = color_code[priority_color_queue_img1[piece_color_img1][prior_color_no_img1]]
@@ -295,12 +311,10 @@ def process_images(img1, img2):
                                 flag2 = 0
                                 change_in_img1 = not change_in_img1
                                 break
-                                
-    print(img2_cubic[0][0][0])
-    print(img1_cubic[0][0][0])
+    
 
-    new_img1 = [[0 for _ in range(75)] for _ in range(75)]
-    new_img2 = [[0 for _ in range(75)] for _ in range(75)]
+    new_img1 = [[0 for _ in range((RES_W*3))] for _ in range((RES_H*3))]
+    new_img2 = [[0 for _ in range((RES_W*3))] for _ in range((RES_H*3))]
 
     my_1d_list = [value for dim1 in temp_array for dim2 in dim1 for value in dim2]
     new_img1_1d = [value for dim1 in img1_cubic for dim2 in dim1 for value in dim2]
@@ -308,8 +322,8 @@ def process_images(img1, img2):
     x = 0
 
     for i in my_1d_list:
-        new_img1[i//75][i%75] = new_img1_1d[x]
-        new_img2[i//75][i%75] = new_img2_id[x]
+        new_img1[i//(RES_W*3)][i%(RES_W*3)] = new_img1_1d[x]
+        new_img2[i//(RES_W*3)][i%(RES_W*3)] = new_img2_id[x]
         x += 1
 
     new_img1 = np.array(new_img1)
@@ -319,16 +333,41 @@ def process_images(img1, img2):
 
     return new_img1, new_img2
 
+def adjust_and_crop_image(img):
+    """Crop image so both width and height are multiples of 3."""
+    width, height = img.size
+    new_width = width - (width % 3)
+    new_height = height - (height % 3)
+    # Crop the image from bottom/right if necessary
+    if (new_width != width) or (new_height != height):
+        img = img.crop((0, 0, new_width, new_height))
+    return img
+
+def get_upscaled_images(img_array, upscale_factor, RES_H, RES_W):
+    import numpy as np
+    from PIL import Image
+
+    # Repeat each input pixel to make each output pixel a square of upscale_factor × upscale_factor pixels
+    upscaled_array = np.kron(img_array, np.ones((upscale_factor, upscale_factor, 1)))
+    img = Image.fromarray(upscaled_array.astype('uint8'), 'RGB')
+
+    # Calculate final upscaled shape based on RES_H, RES_W and upscale factor
+    final_width = RES_W * 3 * upscale_factor
+    final_height = RES_H * 3 * upscale_factor
+
+    # This guarantees the upscaled image fills the entire mosaic grid area, regardless of aspect ratio
+    return img.resize((final_width, final_height))
+
 def main():
-    st.title("Dual-Sided Rubik's Cube Portrait")
+    st.markdown("<h1 style='text-align: center;'>Dual-Sided Rubik's Cube Mosaic 1.0</h1>", unsafe_allow_html=True)
     st.write("---")
 
-    st.sidebar.image("https://yt3.googleusercontent.com/ytc/AIdro_m_FFw3OGZ5SH0U-l_37_HQMQCyqfoL2co8iCBJQgQJ-q4b=s900-c-k-c0x00ffffff-no-rj",  use_container_width=True)
+    st.sidebar.image("example.png",  use_container_width=True)
     
-    st.sidebar.markdown("<div style='font-size:20px; font-weight:bold;'>Center For Creative Learning (CCL), IIT Gandhinagar</div>", unsafe_allow_html=True)
+    st.sidebar.markdown("<div style='font-size:18px; font-weight:bold;'>This application creates a dual-sided Rubik's Cube mosaic from two input images. Cubes are arranged so that 2 adjacent faces displays a different image, revealing a second view when seen from a side angle. Designed for hands-on learning and public engagement, it's a powerful tool for showing how art and algorithms can work together in one space.</div>", unsafe_allow_html=True)
     
     st.markdown("<h4 style='text-align: left;'>Step 1:</h4>", unsafe_allow_html=True)
-    st.markdown("Generate a mosaic for individual images from here (https://bestsiteever.ru/mosaic/) with a resolution of 75x75 pixels, i.e. by using a 25x25 grid of cubes. ")
+    st.markdown("Generate mosaic for individual images from here (https://bestsiteever.ru/mosaic/).")
 
     st.markdown("</br>", unsafe_allow_html=True)
     st.markdown("<h4 style='text-align: left;'>Step 2: Drag and Drop Mosaic Images</h4>", unsafe_allow_html=True)
@@ -338,90 +377,89 @@ def main():
 
     # Upload the second image
     img2 = st.file_uploader("Upload Image 2", type=["png", "jpg", "jpeg"])
-    st.markdown("**Note: Current version only supports input mosaic image with 75x75 pixel resolution (25x25 cubes)!!")
     st.write("---")
 
     # Process the images if both are uploaded
     if img1 is not None and img2 is not None:
-        img1 = Image.open(img1)
-        img2 = Image.open(img2)
+        global RES_H, RES_W
 
-        # Convert the image to RGB format
-        img1_rgb = img1.convert('RGB')
-        img2_rgb = img2.convert('RGB')
+        try:
+            img1 = Image.open(img1).convert('RGB')
+            img1 = adjust_and_crop_image(img1)
+            st.info(f"Image 1 automatically cropped to {img1.size} for mosaic compatibility.")
+        
+            img2 = Image.open(img2).convert('RGB')
+            img2 = adjust_and_crop_image(img2)
+            st.info(f"Image 2 automatically cropped to {img2.size} for mosaic compatibility.")
+        
+        except Exception as e:
+            st.error("❌ Failed to open one or both files. Make sure they're valid images.")
+            st.stop()
 
-        # Convert the RGB image to a NumPy array
-        img1_array = np.array(img1_rgb)
-        img2_array = np.array(img2_rgb)
+        if img1.size != img2.size:
+            st.error("❌ Make sure to upload images with same resolution.")
+            st.stop()
 
-        upscale_factor = 8  # HD resolution is approximately 8 times larger than 75x75
+        else:
+            # Convert the RGB image to a NumPy array
+            img1_array = np.array(img1)
+            img2_array = np.array(img2)
 
-        # Upscale the array
-        upscaled_array1 = np.kron(img1_array, np.ones((upscale_factor, upscale_factor, 1)))
-        upscaled_array2 = np.kron(img2_array, np.ones((upscale_factor, upscale_factor, 1)))
+            RES_H = img1_array.shape[0] // 3  # Height in cube blocks
+            RES_W = img1_array.shape[1] // 3  # Width in cube blocks
 
-        # Convert the numpy array to an image
-        upscaled_img1 = Image.fromarray(upscaled_array1.astype('uint8'), 'RGB')
-        upscaled_img2 = Image.fromarray(upscaled_array2.astype('uint8'), 'RGB')
+            upscale_factor = 8  
+            upscaled_img1 = get_upscaled_images(img1_array, upscale_factor, RES_H, RES_W)
+            upscaled_img2 = get_upscaled_images(img2_array, upscale_factor, RES_H, RES_W)
 
-        # Resize to High resolution
-        upscaled_img1 = upscaled_img1.resize((1920, 1920))
-        upscaled_img2 = upscaled_img2.resize((1920, 1920))
-
-        st.subheader("Image 1")
-        st.image(upscaled_img1,  use_container_width=True)
-
-        st.subheader("Image 2")
-        st.image(upscaled_img2,  use_container_width=True)
-
-        if st.button("Process Images"):
-
-            new_img1, new_img2 = process_images(img1_array, img2_array)
-
-            upscale_factor = 8  # HD resolution is approximately 8 times larger than 75x75
-
-            # Upscale the array
-            upscaled_array1 = np.kron(new_img1, np.ones((upscale_factor, upscale_factor, 1)))
-            upscaled_array2 = np.kron(new_img2, np.ones((upscale_factor, upscale_factor, 1)))
-
-            # Convert the numpy array to an image
-            upscaled_img1 = Image.fromarray(upscaled_array1.astype('uint8'), 'RGB')
-            upscaled_img2 = Image.fromarray(upscaled_array2.astype('uint8'), 'RGB')
-
-            # Resize to High resolution
-            upscaled_img1 = upscaled_img1.resize((1920, 1920))
-            upscaled_img2 = upscaled_img2.resize((1920, 1920))
-
-            st.subheader("Converted Image 1")
+            st.subheader("Image 1")
             st.image(upscaled_img1,  use_container_width=True)
 
-            st.subheader("Converted Image 2")
+            st.subheader("Image 2")
             st.image(upscaled_img2,  use_container_width=True)
 
-            st.success("Images processed successfully!")
-            
-            zip_buffer = BytesIO()
-            with zipfile.ZipFile(zip_buffer, 'a', zipfile.ZIP_DEFLATED, False) as zip_file:
-                for image, filename in zip([Image.fromarray(new_img1), Image.fromarray(new_img2)], ['converted_img1.png', 'converted_img2.png']):
-                    # Create an in-memory stream for each image
-                    image_stream = BytesIO()
-                    image.save(image_stream, format='PNG')
-                    image_bytes = image_stream.getvalue()
-                    # Add the image bytes to the ZIP file
-                    zip_file.writestr(filename, image_bytes)
+            if st.button("Process Images"):
+                try:
+                    new_img1, new_img2 = process_images(img1_array, img2_array)
+                except Exception as e:
+                    st.error("❌ Please upload valid Rubik's Cube miniature mosaic image.")
+                    st.stop()
 
-            # Provide the ZIP file for download
-            zip_data = zip_buffer.getvalue()
-            st.download_button(
-                label="Download Images",
-                data=zip_data,
-                file_name="DualSided_Rubik'sCube_images.zip",
-                mime="application/zip",
-            )
+                upscale_factor = 8  
 
-            st.markdown("</br>", unsafe_allow_html=True)
-            st.markdown("<h4 style='text-align: left;'>Step 3:</h4>", unsafe_allow_html=True)
-            st.markdown("Paste the downloaded/converted images for building mosaic here (https://bestsiteever.ru/mosaic/) and download the pdf.")
+                upscaled_img1 = get_upscaled_images(new_img1, upscale_factor, RES_H, RES_W)
+                upscaled_img2 = get_upscaled_images(new_img2, upscale_factor, RES_H, RES_W)
+
+                st.subheader("Processed Image 1")
+                st.image(upscaled_img1,  use_container_width=True)
+
+                st.subheader("Processed Image 2")
+                st.image(upscaled_img2,  use_container_width=True)
+
+                st.success("Images processed successfully!")
+
+                zip_buffer = BytesIO()
+                with zipfile.ZipFile(zip_buffer, 'a', zipfile.ZIP_DEFLATED, False) as zip_file:
+                    for image, filename in zip([Image.fromarray(new_img1), Image.fromarray(new_img2)], ['converted_img1.png', 'converted_img2.png']):
+                        # Create an in-memory stream for each image
+                        image_stream = BytesIO()
+                        image.save(image_stream, format='PNG')
+                        image_bytes = image_stream.getvalue()
+                        # Add the image bytes to the ZIP file
+                        zip_file.writestr(filename, image_bytes)
+
+                # Provide the ZIP file for download
+                zip_data = zip_buffer.getvalue()
+                st.download_button(
+                    label="Download Images",
+                    data=zip_data,
+                    file_name="DualSided_Rubik'sCube_images.zip",
+                    mime="application/zip",
+                )
+
+                st.markdown("</br>", unsafe_allow_html=True)
+                st.markdown("<h4 style='text-align: left;'>Step 3:</h4>", unsafe_allow_html=True)
+                st.markdown("Paste the downloaded images for building mosaic here (https://bestsiteever.ru/mosaic/) and download the pdf.")
         
 
 if __name__ == "__main__":
