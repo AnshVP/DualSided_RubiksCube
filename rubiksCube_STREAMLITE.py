@@ -358,31 +358,28 @@ def get_upscaled_images(img_array, upscale_factor, RES_H, RES_W):
     # This guarantees the upscaled image fills the entire mosaic grid area, regardless of aspect ratio
     return img.resize((final_width, final_height))
 
-import base64
-
-def get_img_html(path):
-    with open(path, "rb") as file:
-        encoded = base64.b64encode(file.read()).decode()
-        return f"""
-         <p style="display: flex; justify-content: center;">
-        <img src="data:image/png;base64,{encoded}" style="max-width: 350px; height: 160px; border-radius: 10px;">
-    </p>"""
-
-
 def main():
     st.markdown("""
     <style>
         /* Increase sidebar width */
         [data-testid="stSidebar"] {
-            min-width: 370px;
-            max-width: 370px;
-        }
-        /* Optional: increase content padding so main area adjusts */
-        [data-testid="stSidebar"] > div:first-child {
-            padding: 1rem;
+            min-width: 400px;
+            max-width: 400px;
         }
     </style>
 """, unsafe_allow_html=True)
+
+    VIDEO_URL = "https://raw.githubusercontent.com/AnshVP/DualSided_RubiksCube/main/video.mp4"
+
+    st.sidebar.markdown(f"""
+        <p style="display: flex; justify-content: center;">
+            <video autoplay loop muted playsinline style="max-width: 370px; max-height: 400px; border-radius: 10px;">
+                <source src="{VIDEO_URL}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </p>
+    """, unsafe_allow_html=True)
+
 
     col1, col2 = st.columns([2, 8])  # Adjust width ratios as needed
     
@@ -392,12 +389,6 @@ def main():
     with col2:  
         st.markdown("<h1 style='padding-top: 10px;'>Dual-Sided Rubik's Cube Mosaic 1.0</h1>", unsafe_allow_html=True)
     st.write("---") 
-
-
-    img_html = get_img_html("example.png")
-    st.sidebar.markdown(img_html, unsafe_allow_html=True)
-
-    # st.sidebar.image("example.png",  use_container_width=True)
     
     st.sidebar.markdown("<div style='font-size:18px; font-weight:bold;'>This application creates a dual-sided Rubik's Cube mosaic from two input images. Cubes are arranged so that 2 adjacent faces displays a different image, revealing a second view when seen from a side angle. Designed for hands-on learning and public engagement, it's a powerful tool for showing how art and algorithms can work together in one space.</div>", unsafe_allow_html=True)
     
