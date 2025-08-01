@@ -368,7 +368,22 @@ def get_img_html(path):
         <img src="data:image/png;base64,{encoded}" style="max-width: 350px; height: 160px; border-radius: 10px;">
     </p>"""
 
+
 def main():
+    st.markdown("""
+    <style>
+        /* Increase sidebar width */
+        [data-testid="stSidebar"] {
+            min-width: 370px;
+            max-width: 370px;
+        }
+        /* Optional: increase content padding so main area adjusts */
+        [data-testid="stSidebar"] > div:first-child {
+            padding: 1rem;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
     col1, col2 = st.columns([2, 8])  # Adjust width ratios as needed
     
     with col1:
@@ -377,6 +392,7 @@ def main():
     with col2:  
         st.markdown("<h1 style='padding-top: 10px;'>Dual-Sided Rubik's Cube Mosaic 1.0</h1>", unsafe_allow_html=True)
     st.write("---") 
+
 
     img_html = get_img_html("example.png")
     st.sidebar.markdown(img_html, unsafe_allow_html=True)
