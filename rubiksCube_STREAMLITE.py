@@ -363,8 +363,8 @@ def main():
     <style>
         /* Increase sidebar width */
         [data-testid="stSidebar"] {
-            min-width: 400px;
-            max-width: 400px;
+            min-width: 360;
+            max-width: 360;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -373,7 +373,7 @@ def main():
 
     st.sidebar.markdown(f"""
         <p style="display: flex; justify-content: center;">
-            <video autoplay loop muted playsinline style="max-width: 370px; max-height: 400px; border-radius: 10px;">
+            <video autoplay loop muted playsinline style="max-width: 350px; max-height: 400px; border-radius: 10px;">
                 <source src="{VIDEO_URL}" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
